@@ -1,69 +1,79 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models import Contact
-from src.shemas import ContactCreate, ContactUpdate
+from src.sсhemas import ContactCreate, ContactUpdate
 from datetime import datetime, timedelta
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.future import select
 
 
-async def get_contact(db: Session, contact_id: int):
-	return db.query(Contact).filter(Contact.id == contact_id).first()
+async def get_contact(db: AsyncSession, contact_id: int):
+	result = await db.execute(select(Contact).filter(Contact.id == contact_id))
+	return result.scalar()
 
 
-async def get_contacts(db: Session, skip: int = 0, limit: int = 10):
-	return db.query(Contact).offset(skip).limit(limit).all()
+async def get_contacts(db: AsyncSession, skip: int = 0, limit: int = 10):
+	result = await db.execute(select(Contact).offset(skip).limit(limit))
+	return result.scalars().all()
 
 
-async def create_contact(db: Session, contact: ContactCreate):
+async def create_contact(db: AsyncSession, contact: ContactCreate):
 	try:
 		db_contact = Contact(**contact.dict())
 		db.add(db_contact)
-		db.commit()
-		db.refresh(db_contact)
+		await db.commit()
+		await db.refresh(db_contact)
 		return db_contact
 	except IntegrityError:
-		db.rollback()
+		await db.rollback()
+		return None
 
 
-async def update_contact(db: Session, contact_id: int, contact: ContactUpdate):
+async def update_contact(db: AsyncSession, contact_id: int, contact: ContactUpdate):
 	try:
-		db_contact = db.query(Contact).filter(Contact.id == contact_id).first()
+		result = await db.execute(select(Contact).filter(Contact.id == contact_id))
+		db_contact = result.scalar()
 		if db_contact is None:
 			return None
 		for key, value in contact.dict().items():
 			setattr(db_contact, key, value)
-		db.commit()
-		db.refresh(db_contact)
+		await db.commit()
+		await db.refresh(db_contact)
 		return db_contact
 	except IntegrityError:
-		db.rollback()
+		await db.rollback()
+		return None
 
 
-async def delete_contact(db: Session, contact_id: int):
-	db_contact = db.query(Contact).filter(Contact.id == contact_id).first()
+async def delete_contact(db: AsyncSession, contact_id: int):
+	result = await db.execute(select(Contact).filter(Contact.id == contact_id))
+	db_contact = result.scalar()
 	if db_contact is None:
 		return None
-	db.delete(db_contact)
-	db.commit()
+	await db.delete(db_contact)
+	await db.commit()
 	return db_contact
 
 
-def search_contacts(db: Session, query: str):
-	return db.query(Contact).filter(
-		or_(
-			(Contact.first_name.ilike(f"%{query}%"))
-			(Contact.last_name.ilike(f"%{query}%"))
-			(Contact.email.ilike(f"%{query}%"))
+async def search_contacts(db: AsyncSession, query: str):
+	result = await db.execute(
+		select(Contact).filter(
+			or_(
+				Contact.first_name.ilike(f"%{query}%"),
+				Contact.last_name.ilike(f"%{query}%"),
+				Contact.email.ilike(f"%{query}%")
+			)
 		)
-	).all()
+	)
+	return result.scalars().all()
 
 
-async def get_birthdays_within_next_week(db: Session):
+async def get_birthdays_within_next_week(db: AsyncSession):
 	today = datetime.today().date()
 	next_week = today + timedelta(days=7)
-	return db.query(Contact).filter(
-		or_(
-			Contact.birthday >= today,
-			Contact.birthday <= next_week
+	result = await db.execute(
+		select(Contact).filter(
+			Contact.birthday.between(today, next_week)
 		)
-	).all()
+	)
+	return result.scalars().all()
