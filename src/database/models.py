@@ -13,6 +13,7 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     contacts = relationship("Contact", back_populates="user")
     refresh_token = Column(String(255), nullable=True)
+    avatar_url = Column(String, nullable=True)
 
 
 class Contact(Base):

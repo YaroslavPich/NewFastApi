@@ -17,3 +17,5 @@ ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
+BROKER_URL = os.getenv("REDIS_BROKER_URL")
+BACKEND_URL = os.getenv("REDIS_BACKEND_URL")

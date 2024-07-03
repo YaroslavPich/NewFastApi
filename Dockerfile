@@ -7,11 +7,11 @@ WORKDIR /app
 # Copy the pyproject.toml and poetry.lock files into the container
 COPY pyproject.toml poetry.lock ./
 
-# Install poetry
-RUN pip install poetry
+# Install Poetry
+RUN pip install --no-cache-dir poetry
 
 # Install dependencies
-RUN poetry install --no-dev
+RUN poetry install
 
 # Copy the rest of the application code into the container
 COPY . .
@@ -20,4 +20,4 @@ COPY . .
 EXPOSE 8000
 
 # Command to run the application
-CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "poetry run alembic upgrade head && poetry run uvicorn main:app --host 0.0.0.0 --port 8000"]
