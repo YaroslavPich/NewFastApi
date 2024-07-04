@@ -1,8 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 import pickle
-
-from aioredis.client import Redis
+import asyncio_redis
 
 from fastapi import Depends, HTTPException
 from passlib.context import CryptContext
@@ -55,9 +54,9 @@ async def create_refresh_token(data: dict, expires_delta: Optional[float] = None
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: AsyncSession = Depends(get_db),
-    redis_client: Redis = Depends(get_redis_client),
+        token: str = Depends(oauth2_scheme),
+        db: AsyncSession = Depends(get_db),
+        redis_client: asyncio_redis.Connection = Depends(get_redis_client)
 ):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -80,16 +79,16 @@ async def get_current_user(
 
     user_data = await redis_client.get(redis_key)
     if user_data is None:
-        result = await db.execute(select(User).where(User.email == email))
-        user = result.scalar_one_or_none()
-        if user is None:
-            raise credentials_exception
-        await redis_client.set(redis_key, pickle.dumps(user), ex=15 * 60)
+        async with db() as session:
+            result = await session.execute(select(User).where(User.email == email))
+            user = result.scalar_one_or_none()
+
+            if user is None:
+                raise credentials_exception
+
+            await redis_client.setex(redis_key, 15 * 60, pickle.dumps(user))
     else:
         user: User = pickle.loads(user_data)
-
-    if user is None:
-        raise credentials_exception
 
     return user
 
