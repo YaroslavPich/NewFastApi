@@ -18,6 +18,5 @@ COPY . .
 
 # Expose the port the app runs on
 EXPOSE 8000
-
 # Command to run the application
 CMD ["sh", "-c", "poetry run alembic upgrade head && poetry run uvicorn main:app --host 0.0.0.0 --port 8000"]

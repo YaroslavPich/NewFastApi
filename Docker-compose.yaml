@@ -14,8 +14,7 @@ services:
 
   web:
     build: .
-    command: >
-      sh -c "poetry run alembic upgrade head && poetry run uvicorn main:app --host 0.0.0.0 --port 8000"
+    command: sh -c "poetry run alembic upgrade head && poetry run uvicorn main:app --host 0.0.0.0 --port 8000"
     volumes:
       - .:/app
     ports:
@@ -23,18 +22,18 @@ services:
     depends_on:
       - db
       - redis
-      - celery
+#      - celery
 
   redis:
     image: redis
 
-  celery:
-    build: .
-    command: poetry run celery -A celery_worker worker --loglevel=info 
-    depends_on:
-      - redis
-    volumes:
-      - .:/app
+#  celery:
+#    build: .
+#    command: poetry run celery -A celery_worker worker --loglevel=info
+#    depends_on:
+#      - redis
+#    volumes:
+#      - .:/app
 
 volumes:
   postgres_data:
