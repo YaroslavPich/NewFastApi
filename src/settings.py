@@ -1,5 +1,4 @@
 import os
-from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
@@ -20,4 +19,4 @@ ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 BROKER_URL = os.getenv("REDIS_BROKER_URL")
 BACKEND_URL = os.getenv("REDIS_BACKEND_URL")
-REDIS_URL = urlparse(os.getenv("REDIS_URL"))
+REDIS_URL = os.getenv("REDIS_URL")

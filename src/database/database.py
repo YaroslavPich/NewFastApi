@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-import asyncio_redis
+import aioredis
 from src.settings import DATABASE_URL, REDIS_URL
 
 engine = create_async_engine(DATABASE_URL, echo=True)
@@ -18,11 +18,9 @@ async def get_db():
 
 
 async def get_redis_client():
-    redis = await asyncio_redis.Connection.create(
-        host=REDIS_URL.hostname,
-        port=REDIS_URL.port,
-    )
+    redis = await aioredis.from_url(REDIS_URL)
     try:
         yield redis
     finally:
-        await redis.close()
+        redis.close()
+        await redis.wait_closed()
