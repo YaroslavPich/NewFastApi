@@ -18,9 +18,8 @@ async def get_db():
 
 
 async def get_redis_client():
-    redis = await aioredis.from_url(REDIS_URL)
+    redis = aioredis.from_url(REDIS_URL)
     try:
         yield redis
     finally:
-        redis.close()
-        await redis.wait_closed()
+        await redis.close()

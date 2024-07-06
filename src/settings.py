@@ -1,8 +1,10 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 from fastapi.security import OAuth2PasswordBearer
+from fastapi_mail import ConnectionConfig
 
 load_dotenv()
 
@@ -17,6 +19,24 @@ ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
-BROKER_URL = os.getenv("REDIS_BROKER_URL")
-BACKEND_URL = os.getenv("REDIS_BACKEND_URL")
+
+REDIS_BROKER_URL = os.getenv("REDIS_BROKER_URL")
+REDIS_BACKEND_URL = os.getenv("REDIS_BACKEND_URL")
 REDIS_URL = os.getenv("REDIS_URL")
+
+EMAIL_META = os.getenv("EMAIL_META")
+PASSWORD_META = os.getenv("PASSWORD_META")
+
+conf = ConnectionConfig(
+	MAIL_USERNAME=EMAIL_META,
+	MAIL_PASSWORD=PASSWORD_META,
+	MAIL_FROM=EMAIL_META,
+	MAIL_PORT=465,
+	MAIL_SERVER="smtp.meta.ua",
+	MAIL_FROM_NAME="FastAPI",
+	MAIL_STARTTLS=False,
+	MAIL_SSL_TLS=True,
+	USE_CREDENTIALS=True,
+	VALIDATE_CERTS=True,
+	TEMPLATE_FOLDER=Path(__file__).parent / 'templates'
+)

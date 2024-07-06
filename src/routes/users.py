@@ -1,11 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import APIRouter, Depends, HTTPException, status, Security
+from fastapi import APIRouter, Depends, HTTPException, status, Security, BackgroundTasks
+
 from fastapi.security import (
 	OAuth2PasswordRequestForm,
 	HTTPAuthorizationCredentials,
 	HTTPBearer,
 )
 from src.schemas import UserModel
+from celery_worker import send_test_email_task
 from src.database.database import get_db
 from src.repository.users import UserService, UsernameTaken, LoginFailed
 from fastapi.responses import JSONResponse
@@ -64,3 +66,7 @@ async def refresh_token(
 		"token_type": "bearer",
 	}
 
+
+@router.post('/send_test_email')
+async def send_test_email(email_to_send: str, background_task: BackgroundTasks):
+	send_test_email_task.delay(email_to_send)
