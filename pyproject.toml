@@ -28,6 +28,8 @@ setuptools = "^70.2.0"
 asyncio-redis = "^0.16.0"
 fastapi-mail = "^1.4.1"
 asyncio = "^3.4.3"
+fastapi-limiter = "^0.1.6"
+cloudinary = "^1.40.0"
 
 
 [build-system]

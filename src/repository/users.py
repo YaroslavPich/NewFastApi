@@ -1,4 +1,5 @@
 from typing import Optional
+from fastapi import UploadFile
 from src.repository.auth import (
     Hash,
     create_access_token,
@@ -10,6 +11,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from src.schemas import UserModel
+from src.utils.cloudinary import upload_file_to_cloudinary
 
 hash_handler = Hash()
 
@@ -72,6 +74,8 @@ class UserService:
         user = await UserService.get_user(body.username, db=db)
         if not user:
             raise LoginFailed
+        if not user.confirmed:
+            raise LoginFailed
         data = {"sub": user.email}
         UserService.check_password(body.password, user.hashed_password)
         access_token = await create_access_token(data=data)
@@ -103,3 +107,15 @@ class UserService:
         await db.commit()
         await db.refresh(user_to_save)
         return user_to_save
+
+    @staticmethod
+    async def confirmed_email(email: str, db: AsyncSession) -> None:
+        user = await UserService.get_user_email(email, db)
+        user.confirmed = True
+        await db.commit()
+
+    @staticmethod
+    def update_avatar(user: User, file: UploadFile, db: AsyncSession):
+        user.avatar_url = upload_file_to_cloudinary(file.file, f'user avatar{user.id}')
+        UserService.save_user(user, db)
+        return user

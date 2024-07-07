@@ -14,6 +14,7 @@ class User(Base):
 	contacts = relationship("Contact", back_populates="user")
 	refresh_token = Column(String(255), nullable=True)
 	avatar_url = Column(String, nullable=True)
+	confirmed = Column(Boolean, default=False, nullable=True)
 
 
 class Contact(Base):

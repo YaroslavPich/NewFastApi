@@ -4,33 +4,39 @@ from datetime import date
 
 
 class ContactBase(BaseModel):
-	first_name: str
-	last_name: str
-	email: EmailStr
-	phone_number: str
-	birthday: date
-	additional_info: Optional[str] = None
+    first_name: str
+    last_name: str
+    email: EmailStr
+    phone_number: str
+    birthday: date
+    additional_info: Optional[str] = None
 
 
 class ContactCreate(ContactBase):
-	pass
+    pass
 
 
 class ContactUpdate(ContactBase):
-	pass
+    pass
 
 
 class ContactInDB(ContactBase):
-	id: int
+    id: int
 
-	class Config:
-		orm_mode = True
+    class Config:
+        orm_mode = True
 
 
 class UserModel(BaseModel):
-	username: str
-	email: EmailStr
-	password: str
+    username: str
+    email: EmailStr
+    password: str
 
 
+class UserDisplayModel(BaseModel):
+    username: str
+    avatar_url: str
 
+
+class RequestEmail(BaseModel):
+    email: EmailStr
