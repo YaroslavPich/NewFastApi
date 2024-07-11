@@ -13,11 +13,20 @@ class ContactBase(BaseModel):
 
 
 class ContactCreate(ContactBase):
-    pass
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
+    birthday: Optional[str] = None
 
 
-class ContactUpdate(ContactBase):
-    pass
+class ContactUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone_number: Optional[str] = None
+    birthday: Optional[date] = None
+    additional_info: Optional[str] = None
 
 
 class ContactInDB(ContactBase):
