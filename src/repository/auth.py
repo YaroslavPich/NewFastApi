@@ -18,16 +18,48 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class Hash:
+    """
+    A class used for password hashing and verification.
+    """
+
     @staticmethod
-    def verify_password(plain_password, hashed_password):
+    def verify_password(plain_password: str, hashed_password: str) -> bool:
+        """
+        Verify a plain password against a hashed password.
+
+        :param plain_password: The plain text password to verify.
+        :type plain_password: str
+        :param hashed_password: The hashed password to verify against.
+        :type hashed_password: str
+        :return: True if the password matches, False otherwise.
+        :rtype: bool
+        """
         return pwd_context.verify(plain_password, hashed_password)
 
     @staticmethod
-    def get_password_hash(password: str):
+    def get_password_hash(password: str) -> str:
+        """
+        Generate a hashed password.
+
+        :param password: The plain text password to hash.
+        :type password: str
+        :return: The hashed password.
+        :rtype: str
+        """
         return pwd_context.hash(password)
 
 
-async def create_access_token(data: dict, expires_delta: Optional[float] = None):
+async def create_access_token(data: dict, expires_delta: Optional[float] = None) -> str:
+    """
+    Create an access token.
+
+    :param data: The data to encode in the token.
+    :type data: dict
+    :param expires_delta: Optional expiration time in seconds.
+    :type expires_delta: Optional[float]
+    :return: The encoded access token.
+    :rtype: str
+    """
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + timedelta(seconds=expires_delta)
@@ -40,7 +72,17 @@ async def create_access_token(data: dict, expires_delta: Optional[float] = None)
     return encoded_access_token
 
 
-async def create_refresh_token(data: dict, expires_delta: Optional[float] = None):
+async def create_refresh_token(data: dict, expires_delta: Optional[float] = None) -> str:
+    """
+    Create a refresh token.
+
+    :param data: The data to encode in the token.
+    :type data: dict
+    :param expires_delta: Optional expiration time in seconds.
+    :type expires_delta: Optional[float]
+    :return: The encoded refresh token.
+    :rtype: str
+    """
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + timedelta(seconds=expires_delta)
@@ -54,10 +96,23 @@ async def create_refresh_token(data: dict, expires_delta: Optional[float] = None
 
 
 async def get_current_user(
-        token: str = Depends(oauth2_scheme),
-        db: AsyncSession = Depends(get_db),
-        redis_client: aioredis.Redis = Depends(get_redis_client)
-):
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
+    redis_client: aioredis.Redis = Depends(get_redis_client)
+) -> User:
+    """
+    Get the current user based on the provided token.
+
+    :param token: The JWT token.
+    :type token: str
+    :param db: The database session.
+    :type db: AsyncSession
+    :param redis_client: The Redis client.
+    :type redis_client: aioredis.Redis
+    :return: The current user.
+    :rtype: User
+    :raises HTTPException: If the credentials are not valid.
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -93,7 +148,16 @@ async def get_current_user(
     return user
 
 
-async def get_email_form_refresh_token(refresh_token: str):
+async def get_email_form_refresh_token(refresh_token: str) -> str:
+    """
+    Get email from the refresh token.
+
+    :param refresh_token: The refresh token.
+    :type refresh_token: str
+    :return: The email associated with the refresh token.
+    :rtype: str
+    :raises HTTPException: If the token is not valid.
+    """
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         if payload["scope"] == "refresh_token":
