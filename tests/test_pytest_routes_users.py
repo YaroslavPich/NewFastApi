@@ -1,70 +1,39 @@
+import pytest
 from unittest.mock import MagicMock
+from fastapi.testclient import TestClient
+from fastapi import status
+from src.routes import auth
 
-from src.database.models import Contact
+
+@pytest.fixture
+def client():
+    return TestClient(auth.router)
 
 
-def test_create_contact(client, contact, monkeypatch):
+def test_create_user(client, user, monkeypatch):
     mock_send_email = MagicMock()
-    monkeypatch.setattr("src.routes.contacts", mock_send_email)
+    monkeypatch.setattr("src.routes.auth.send_email", mock_send_email)
     response = client.post(
-        "/contacts/contacts/",
-        json=contact,
+        "/user/users/signup",  # Fixed URL here
+        json=user,
     )
     assert response.status_code == 201, response.text
     data = response.json()
-    assert data["email"] == contact.get("email")
-    assert "id" in data
+    assert data["user"]["email"] == user.get("email")
+    assert "id" in data["user"]
 
 
-def test_read_contacts(client):
-    response = client.get("/contacts/contacts/")
-    assert response.status_code == 200, response.text
+def test_login_user_not_confirmed(client, user):
+    response = client.post("/user/users/login", data={"username": user["email"], "password": user["password"]})
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
     data = response.json()
-    assert isinstance(data, list)
+    assert data["detail"] == "Email not confirmed"
 
 
-def test_read_contact(client, contact):
-    response = client.post(
-        "/contacts/contacts/",
-        json=contact,
-    )
-    assert response.status_code == 201, response.text
-    created_contact = response.json()
+def test_send_test_email(client):
+    response = client.post("/user/users/send_test_email", json={"email_to_send": "test@example.com"})
 
-    response = client.get(f"/contacts/contacts/{created_contact['id']}")
-    assert response.status_code == 200, response.text
-    data = response.json()
-    assert data["id"] == created_contact['id']
+    assert response.status_code == status.HTTP_200_OK
 
 
-def test_update_contact(client, contact):
-    response = client.post(
-        "/contacts/contacts/",
-        json=contact,
-    )
-    assert response.status_code == 201, response.text
-    created_contact = response.json()
-
-    update_data = {"email": "updated_email@example.com"}
-
-    response = client.put(
-        f"/contacts/contacts/{created_contact['id']}",
-        json=update_data,
-    )
-    assert response.status_code == 200, response.text
-    updated_contact = response.json()
-    assert updated_contact["email"] == update_data["email"]
-
-
-def test_delete_contact(client, contact):
-    response = client.post(
-        "/contacts/contacts/",
-        json=contact,
-    )
-    assert response.status_code == 201, response.text
-    created_contact = response.json()
-
-    response = client.delete(f"/contacts/contacts/{created_contact['id']}")
-    assert response.status_code == 200, response.text
-    deleted_contact = response.json()
-    assert deleted_contact["id"] == created_contact['id']
