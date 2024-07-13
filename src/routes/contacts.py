@@ -18,7 +18,7 @@ from src.database.database import get_db
 from src.database.models import Contact, User
 from src.repository.auth import get_current_user
 
-router = APIRouter(prefix='/contacts', tags=["contacts"])
+router = APIRouter()
 
 @router.post("/", response_model=ContactInDB, dependencies=[Depends(RateLimiter(times=1, seconds=60))])
 async def create_contact(

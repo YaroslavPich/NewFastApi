@@ -1,44 +1,44 @@
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from main import app
 from src.database.models import Base
 from src.database.database import get_db
 
+# Define a test database URL
+DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+# SQLAlchemy engine and session setup
+engine = create_async_engine(DATABASE_URL, echo=True)
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+    class_=AsyncSession
 )
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+async def init_models():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
 
 
-@pytest.fixture(scope="module")
-def session():
-    # Create the database
-
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+@pytest_asyncio.fixture(scope="module")
+async def session():
+    await init_models()
+    async with SessionLocal() as local_session:
+        yield local_session
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 def client(session):
     # Dependency override
 
     def override_get_db():
-        try:
-            yield session
-        finally:
-            session.close()
+        yield session
 
     app.dependency_overrides[get_db] = override_get_db
 

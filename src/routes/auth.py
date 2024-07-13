@@ -8,7 +8,7 @@ from src.repository.users import UserService
 from src.repository.auth import get_email_from_token, create_email_token, Hash
 from celery_worker import send_email
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter()
 
 security = HTTPBearer()
 

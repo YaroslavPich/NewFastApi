@@ -10,7 +10,7 @@ from src.repository.users import UserService, UsernameTaken, LoginFailed
 from celery_worker import send_test_email_task, send_email
 from src.repository.auth import get_current_user
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter()
 
 user_service = UserService()
 
